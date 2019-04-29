@@ -14,7 +14,7 @@ var connection = mysql.createConnection({
     user: "root",
   //T O   D O   S E C U R E   P W 
     // Your password
-    password: "Coboldman09!",
+  
     database: "bamazonDB"
   });
 
@@ -61,7 +61,8 @@ function formatData (res) {
     displayData(dataRows);
 }
 
-//Display data
+//Display data using cli-table and csv packages
+//T O   D O    
 function displayData(dataRows) {
     console.log(dataRows);
     csv().from.string(dataRows).to.array(function(dataRows) {
