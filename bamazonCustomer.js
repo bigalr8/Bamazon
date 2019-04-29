@@ -15,14 +15,14 @@ var connection = mysql.createConnection({
     user: "root",
     //T O   D O   S E C U R E   P W 
     // Your password
-   
+    
     database: "bamazonDB"
 });
 
 //C O N N E C T 
 connection.connect(function (err) {
     if (err) throw err;
-    console.log("connected as id " + connection.threadId);
+    //console.log("connected as id " + connection.threadId);
     queryProducts();
 });
 
@@ -30,10 +30,10 @@ connection.connect(function (err) {
 function queryProducts() {
 
     var sql = "SELECT * from products";
-    console.log("sql: " + sql);
+    //console.log("sql: " + sql);
     connection.query(sql, function (err, res) {
         if (err) throw err;
-        console.log(res);
+        //console.log(res);
         formatData(res);
 
 
@@ -63,8 +63,8 @@ function formatData(res) {
             */
             "\n";
         items.push(res[i].item_id);
-        console.log("typeof res[i].item_id: " + typeof (res[i].item_id));
-        console.log("items: " + items)
+        //console.log("typeof res[i].item_id: " + typeof (res[i].item_id));
+        //console.log("items: " + items)
         //dataRows.push(dataRowStr);
     }//end for
     //console.log("items: " + items);
@@ -74,7 +74,7 @@ function formatData(res) {
 //D I S P L A Y   P R O D U C T S data using cli-table and csv packages
 //T O   D O    
 function displayData(dataRows) {
-    console.log(dataRows);
+    //console.log(dataRows);
     csv().from.string(dataRows).to.array(function (dataRows) {
         var
             headers = dataRows[0],
@@ -83,6 +83,7 @@ function displayData(dataRows) {
             ;
 
         table.push.apply(table, values);
+        // T A B L E   D I S P L A Y
         console.log(table.toString());
         orderOrExit();
     });
@@ -103,10 +104,10 @@ function orderOrExit() {
         .then(function(answer) {
             // based on their answer, either call take the order or quit the app
             //console.log("answer: " + answer)
-            console.log("orderOrExit: " + answer.orderOrExit);
+            //console.log("orderOrExit: " + answer.orderOrExit);
              
             if (answer.orderOrExit === "ORDER") {
-                console.log(".then takeorder");    
+                //console.log(".then takeorder");    
                 takeOrder();
             }
             else{
@@ -117,7 +118,7 @@ function orderOrExit() {
 }
 
 function takeOrder() {
-    console.log("takeOrder");
+    //console.log("takeOrder");
                 // prompt for info about the item being put up for auction
     inquirer
         .prompt([            
@@ -126,18 +127,18 @@ function takeOrder() {
                 type: "input",
                 message: "Enter an item number or press [enter] to exit",
                 validate: function (value) {
-                    console.log("\nvalue: " + value); 
+                    //console.log("\nvalue: " + value); 
                     if (value == "") {
-                        console.log("\nvalue: " + value);
+                        //console.log("\nvalue: " + value);
                         return true;
                     }//end if
-                    console.log("items: " + items);
+                    /*console.log("items: " + items);
                     console.log("value: " + value);
                     console.log("typeof value: " + typeof (value));
-                    console.log("\nincludes: " + items.includes(value));
+                    console.log("\nincludes: " + items.includes(value));*/
                     var valInt = parseInt(value);
                     if (!items.includes(valInt)) {
-                        console.log("\nincludes: " + items.includes(value));
+                        //console.log("\nincludes: " + items.includes(value));
                         console.log("\n" + value + " is not a valid item number");
                         return false;
                     }//end if
@@ -148,13 +149,13 @@ function takeOrder() {
             
         ])//end prompt
         .then(function (answer) {
-            console.log(".then - answer.item: " + answer.item);
+            //console.log(".then - answer.item: " + answer.item);
              if (answer.item == "") {
-                console.log(".then - answer.item: " + answer.item); 
+                //console.log(".then - answer.item: " + answer.item); 
                 console.log("\nThank you. Come again.")
                 connection.end();
              }//end if  
              console.log("Validating...");
-             //connection.end();
+             connection.end();
         });//end then
 }//end function
