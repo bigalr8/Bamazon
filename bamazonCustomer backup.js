@@ -22,7 +22,7 @@ var connection = mysql.createConnection({
 	user: "root",
 	//T O   D O   S E C U R E   P W 
 	// Your password
-
+	password: "Coboldman09!",
 	database: "bamazonDB"
 });
 
@@ -42,6 +42,7 @@ function queryProducts() {
 		if (err) throw err;
 		//console.log(res);
 		formatData(res);
+		console.log ("formatData returned to queryProducts");
 
 
 	});
@@ -76,9 +77,11 @@ function formatData(res) {
 	} //end for
 	//console.log("items: " + items);
 	displayData(dataRows);
+	onmouseleave.log("displayData returned to formatData");
 }
 
-//F O R M A T   O R D E R   
+//F O R M A T   O R D E R 
+/*  
 function formatOrder() {
 	//T O   D O   R E P L A C E   ,   &   ""
 	//T O   D O   F O R M A T   P R I C E   T O   I N C L U D E   .00   D E C I M A L 
@@ -101,7 +104,9 @@ function formatOrder() {
 	 
 	 
 	displayOrder(dataRows);
+	console.log("displayOrder returned to formatOrder")
 }
+
 
 function displayOrder(dataRows) {
 	//console.log(dataRows);
@@ -120,6 +125,7 @@ function displayOrder(dataRows) {
 	});
 
 }
+*/
 
 //D I S P L A Y   P R O D U C T S   A N D   F A C I L I T A T E   O R D E R I N G   O R   Q U I T T I N G  
 //cli-table and csv packages
@@ -283,6 +289,7 @@ function takeQty() {
             //displayOrder();
             console.log("\n  " + orderQty + " " + prodNm + " At $" + prodPrc + " - Total $" + orderCost );
 			confirmOrder(answer.orderQty);
+			console.log("confirmOrder returned to takeQty")
 		}); //end then   
 }
 
@@ -304,12 +311,13 @@ function confirmOrder(qty) {
 			if (answer.confirm === "PLACE ORDER") {
 				//console.log(".then takeorder");    
 				processOrder();
+				console.log("processOrder returned to confirmOrder");
 			} else {
 				console.log("\nThank you. Come again.")
 				
 			}
-			connection.end();
-			//return;
+			//connection.end();
+			return;
 		});
 }
 
@@ -326,5 +334,5 @@ function processOrder() {
 		if (err) throw err;
 		 
 	})
- 
+	return;
 	}//end function
