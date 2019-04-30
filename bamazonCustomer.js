@@ -1,5 +1,7 @@
+var dotenv = require('dotenv').config();
 var mysql = require("mysql");
 var inquirer = require("inquirer");
+var fs = require("fs");
 var csv = require("csv");
 var Table = require("cli-table");
 var items = [];
@@ -10,6 +12,9 @@ var prodInv = 0;
 var prodSold = 0;
 var orderQty = 0;
 var orderCost = 0;
+   
+
+ 
 
 //Connect to database
 var connection = mysql.createConnection({
@@ -22,15 +27,20 @@ var connection = mysql.createConnection({
 	user: "root",
 	//T O   D O   S E C U R E   P W 
 	// Your password
-
-	database: "bamazonDB"
+	password: process.env.DATABASE_PASSWORD,
+	database: process.env.DATABASE_NAME
 });
+
+ 
+ 
 
 //C O N N E C T   A N D   I N V O KE   Q U E R Y 
 connection.connect(function (err) {
+	console.log("connection: " + connection.password)
 	if (err) throw err;
 	//console.log("connected as id " + connection.threadId);
 	queryProducts();
+		 
 });
 
 //S E L E C T   F R O M   P R O D U C T S   A N D   F O R M A T   F O R   D  I S P L A Y
