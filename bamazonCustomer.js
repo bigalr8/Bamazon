@@ -1,10 +1,13 @@
-var dotenv = require('dotenv').config();
-var mysql = require("mysql");
-var inquirer = require("inquirer");
-var fs = require("fs");
-var csv = require("csv");
-var Table = require("cli-table");
-var items = [];
+var dotenv = require('dotenv').config(); // Package for storing credentials external to code
+var mysql = require("mysql");			 // Package for database and SQL	
+var inquirer = require("inquirer");		 // Package for predefined command line prompting   
+var fs = require("fs");					 // Package for file handling
+var csv = require("csv");				 // Package for console table formatting 
+var Table = require("cli-table");		 // " 								   "
+var util = require('util');				 // Package for Include util built-in package to format file output
+
+//= Global variables =====================================
+var items = [];				
 var prodId = 0;
 var prodNm = "";
 var prodPrc = 0;
@@ -13,129 +16,76 @@ var prodSold = 0;
 var orderQty = 0;
 var orderCost = 0;
    
+//= Configure to log output to both file and console
+//= Open a writeable stream to "LIRI.log" in append mode vs write to append data to end of file
+var log_file = fs.createWriteStream(__dirname + '/bama.log', {flags : 'a'});
+//= Assign the standard output stream  
+var log_stdout = process.stdout;
 
- 
+//= Set "console.log" function to use fs.write to use the writeable stream to write to the log file 
+//= and to use process.stdout.write to write to the console
+console.log = function(d) { //
+  log_file.write(util.format(d) + '\n');
+  log_stdout.write(util.format(d) + '\n');
+};
 
+
+
+//= Database connection configuration =====================
 //Connect to database
 var connection = mysql.createConnection({
 	host: "localhost",
-
-	// Your port; if not 3306
 	port: 3306,
-
-	// Your username
 	user: "root",
-	//T O   D O   S E C U R E   P W 
-	// Your password
 	password: process.env.DATABASE_PASSWORD,
 	database: process.env.DATABASE_NAME
 });
 
- 
- 
-
-//C O N N E C T   A N D   I N V O KE   Q U E R Y 
+//= Database connection and initial callback =============
 connection.connect(function (err) {
-	console.log("connection: " + connection.password)
+	 
 	if (err) throw err;
-	//console.log("connected as id " + connection.threadId);
 	queryProducts();
-		 
+	//console.log("queryProducts return to DB connection")	 
 });
 
-//S E L E C T   F R O M   P R O D U C T S   A N D   F O R M A T   F O R   D  I S P L A Y
+//= Obtain all products for sale and call next functions
 function queryProducts() {
 
 	var sql = "SELECT * from products";
-	//console.log("sql: " + sql);
 	connection.query(sql, function (err, res) {
 		if (err) throw err;
 		//console.log(res);
 		formatData(res);
-
-
 	});
 }
 
-//F O R M A T   P R O D U C T S  
+//= Organize product data for display using cli-table package,
+//= capture product codes, and call next function  
 function formatData(res) {
-	//T O   D O   R E P L A C E   ,   &   ""
-	//T O   D O   F O R M A T   P R I C E   T O   I N C L U D E   .00   D E C I M A L 
 	var dataRowStr = "";
 	var dataHeader = "Item,Product,Department,Price,\n"
-	/*Inventory, Units Sold, Sales */
-
 	var dataRows = "";
 	dataRows = dataHeader;
 	for (i = 0; i < res.length; i++) {
-		//console.log("price: " + res[i].price);   
 		dataRows = dataRows + res[i].item_id + "," +
-			res[i].product_name + "," +
-			res[i].department_name + "," +
-			res[i].price.toFixed(2) + "," +
-			/*
-			                        res[i].stock_quantity + "," +
-			                        res[i].units_sold + "," +
-			                        res[i].product_sales.toFixed(2) + 
-			*/
-			"\n";
+		res[i].product_name + "," +
+		res[i].department_name + "," +
+		res[i].price.toFixed(2) + "," +
+		"\n";
+		//capture product codes for use in validating order data
 		items.push(res[i].item_id);
-		//console.log("typeof res[i].item_id: " + typeof (res[i].item_id));
-		//console.log("items: " + items)
-		//dataRows.push(dataRowStr);
+		 
 	} //end for
-	//console.log("items: " + items);
 	displayData(dataRows);
 }
 
-//F O R M A T   O R D E R   
-function formatOrder() {
-	//T O   D O   R E P L A C E   ,   &   ""
-	//T O   D O   F O R M A T   P R I C E   T O   I N C L U D E   .00   D E C I M A L 
-    var dataRowStr = "";
-    //answer.orderQty + " " + prodNm + "At " + prodPrc + " - Total $" + (parseInt(answer.orderQty) * parseFloat(prodPrc)) 
-	var dataHeader = "Qty,Product,Price,Total,\n"
-	 
 
-	var dataRows = "";
-	dataRows = dataHeader;
-	 
-		  
-		dataRows = dataRows + orderQty + "," +
-			prodNm + "," +
-			prodPrc + "," +
-			orderCost.toFixed(2) + "," +
-			"\n";
-		 
-		 
-	 
-	 
-	displayOrder(dataRows);
-}
+ 
 
-function displayOrder(dataRows) {
-	//console.log(dataRows);
-	csv().from.string(dataRows).to.array(function (dataRows) {
-		var
-			headers = dataRows[0],
-			values = dataRows.slice(1),
-			table = new Table({
-				head: headers
-			});
-
-		table.push.apply(table, values);
-		// T A B L E   D I S P L A Y
-		console.log(table.toString());
-		return;
-	});
-
-}
-
-//D I S P L A Y   P R O D U C T S   A N D   F A C I L I T A T E   O R D E R I N G   O R   Q U I T T I N G  
-//cli-table and csv packages
-//T O   D O    
+//= Display products available for purchase in table format using
+//= cli-table and csv package functions, and call next function
 function displayData(dataRows) {
-	//console.log(dataRows);
 	csv().from.string(dataRows).to.array(function (dataRows) {
 		var
 			headers = dataRows[0],
@@ -143,7 +93,6 @@ function displayData(dataRows) {
 			table = new Table({
 				head: headers
 			});
-
 		table.push.apply(table, values);
 		// T A B L E   D I S P L A Y
 		console.log(table.toString());
@@ -151,9 +100,9 @@ function displayData(dataRows) {
 	});
 
 }
-//F A C I L I T A T E   O R D E R I N G   O R   Q U I T T I N G    A N D   G E T   P R O D U C T   T O   B E   O R D E R E D
+//= Prompt user to intiate purchase and call next function=========
+//= Always allowing user option to exit the app
 function orderOrExit() {
-	// prompt for info about the item being put up for auction
 	inquirer
 		.prompt([{
 			name: "orderOrExit",
@@ -162,108 +111,84 @@ function orderOrExit() {
 			choices: ["ORDER", "EXIT STORE"]
 		}, ])
 		.then(function (answer) {
-			// based on their answer, either call take the order or quit the app
-			//console.log("answer: " + answer)
-			//console.log("orderOrExit: " + answer.orderOrExit);
-
 			if (answer.orderOrExit === "ORDER") {
-				//console.log(".then takeorder");    
-				takeOrder();
+			    takeOrder();
 			} else {
-				console.log("\nThank you. Come again.")
+				console.log("\n  Thank you. Come again.")
 				connection.end();
 			}
 		});
 }
 
+//= Prompt user to specify item for purchase ===================== 
 function takeOrder() {
-	//console.log("takeOrder");
-	// prompt for info about the item being put up for auction
 	inquirer
 		.prompt([{
 				name: "item",
 				type: "input",
 				message: "Enter an item number or press [enter] to exit",
+
+				//= Validate item code allowing for use to exit 
 				validate: function (value) {
-					//console.log("\nvalue: " + value); 
 					if (value == "") {
-						//console.log("\nvalue: " + value);
 						return true;
 					} //end if
-					/*console.log("items: " + items);
-					console.log("value: " + value);
-					console.log("typeof value: " + typeof (value));
-					console.log("\nincludes: " + items.includes(value));*/
+					//= Validate item code as an exisiting one
 					var valInt = parseInt(value);
 					if (!items.includes(valInt)) {
-						//console.log("\nincludes: " + items.includes(value));
-						console.log("\n" + value + " is not a valid item number");
+						console.log("\n  " + value + " is not a valid item number");
 						return false;
 					} //end if
-					//console.log("\nvalidate item: " + valInt);
-					// Q U E R Y   F O R   S P E C I F I E D   P R O D U C T
-					getProduct(valInt)
 
+					//= Get data for specified product for use in checking available qty, 
+					//= computing order cost, and updating inventory and product toital sales  
+					getProduct(valInt)
 					return true;
 				} //end validate
 
-			} //end item
-
+			} //end prompt
 		]) //end prompt
 		.then(function (answer) {
-			//console.log(".then - answer.item: " + answer.item);
 			if (answer.item == "") {
-				//console.log(".then - answer.item: " + answer.item); 
-				console.log("\nThank you. Come again.")
+				console.log("\n  Thank you. Come again.")
 				connection.end();
+				return;
 			} //end if  
-			//console.log("\nValidating...");
-
-			//processOrder(answer.item, answer.orderQty);
-			takeQty();
-			//connection.end();
+			
+			 
+			takeOrderQty();
 		}); //end then
 } //end function    
 
-
+//= Get data for specified product for use in checking available qty, 
+//= computing order cost, and updating inventory and product toital sales  
 function getProduct(item) {
 	//console.log("getProduct item: " + item);
 	var sql = "SELECT * from products where item_id = ?";
 	//console.log("sql: " + sql);
 	connection.query(sql, [parseInt(item)], function (err, res) {
 		if (err) throw err;
-		//console.log("processOrder DB qty: " + res[0].stock_quantity);
-		//console.log("processOrder order qty: " + qty);
-
+		 
 		prodId = res[0].item_id;
 		prodNm = res[0].product_name;
 		prodPrc = res[0].price;
 		prodInv = res[0].stock_quantity;
 		prodSold = res[0].units_sold;
-		 
-
-        /*
-		console.log("id: " + prodId);
-		console.log("Nm: " + prodNm);
-		console.log("Prc: " + prodPrc);
-		console.log("Inv: " + prodInv);
-        */
-		//get Qty(); 
-		//connection.end();   
 	})
 }
 
-function takeQty() {
+//= Prompt user to specify quantity for purchase, confirm product availability, 
+//= and display order details 
+function takeOrderQty() {
 	inquirer
 		.prompt([
-
 			{
 				name: "orderQty",
 				type: "input",
 				message: "Enter quantity or press [Enter] to exit",
 				validate: function (value) {
-                    if (isNaN(value) === true) {validating
-                        
+                    if (isNaN(value) === true) {
+						console.log("\n  Invalid Entry. Please re-enter")
                         return false;
                     }
                     if (parseInt(value) > prodInv) {
@@ -275,29 +200,24 @@ function takeQty() {
 			}
 		]) //end prompt
 		.then(function (answer) {
-			//console.log(".then - answer.item: " + answer.orderQty);
+			  
 			if (answer.orderQty == "") {
-				//console.log(".then - answer.item: " + answer.item); 
-				console.log("\nThank you. Come again.")
+				console.log("\n  Thank you. Come again.")
 				connection.end();
 			} //end if  
-			//console.log("Validating...");
-            
-			//processOrder(answer.item, answer.orderQty);
-            //getQty();
-            //console.log("typeof answer.orderQty: " + typeof (answer.orderQty));
-            //console.log("typeof prodPrc: " + typeof (prodPrc));
-            orderQty = (parseInt(answer.orderQty));
-            orderCost = (parseInt(answer.orderQty) * parseFloat(prodPrc));
-            //formatOrder();
-            //displayOrder();
-            console.log("\n  " + orderQty + " " + prodNm + " At $" + prodPrc + " - Total $" + orderCost );
-			confirmOrder(answer.orderQty);
+			 else 
+			 {
+				orderQty = (parseInt(answer.orderQty));
+				orderCost = (parseInt(answer.orderQty) * parseFloat(prodPrc));
+				
+				console.log("\n  " + orderQty + " " + prodNm + " At $" + prodPrc + " - Total $" + orderCost );
+				confirmOrder();
+			}
 		}); //end then   
 }
 
-
-function confirmOrder(qty) {
+//= Prompt user for order verification =============================
+function confirmOrder() {
 	// prompt for order confrimation
 	inquirer
 		.prompt([{
@@ -307,34 +227,32 @@ function confirmOrder(qty) {
 			choices: ["PLACE ORDER", "CANCEL"]
 		}, ])
 		.then(function (answer) {
-			// based on their answer, either call take the order or quit the app
-			//console.log("answer: " + answer)
-			//console.log("orderOrExit: " + answer.orderOrExit);
-// S H O U L D   B E   answer.confirm
+ 
 			if (answer.confirm === "PLACE ORDER") {
-				//console.log(".then takeorder");    
 				processOrder();
 			} else {
-				console.log("\nThank you. Come again.")
-				
+				console.log("\n  Thank you. Come again.")
 			}
 			connection.end();
 			//return;
 		});
 }
 
+//= Compute updated inventory and product total sales and update in database
 function processOrder() {
     //console.log("answer: " + item);
 	var newInv = prodInv - orderQty;
 	var newSold = prodSold + orderQty;
-	console.log("old inv: " + prodInv + "  ord qty: " + orderQty + "  new Inv: " + newInv);
-	console.log("old units sold: " + prodSold + "  ord qty: " + orderQty + "  new units sold: " + newSold);
+
+	//console.log("old inv: " + prodInv + "  ord qty: " + orderQty + "  new Inv: " + newInv);
+	//console.log("old units sold: " + prodSold + "  ord qty: " + orderQty + "  new units sold: " + newSold);
  
 	var sql = "UPDATE products SET stock_quantity = ?, units_sold = ? where item_id = ?";
-	console.log("sql: " + sql);
+	
 	connection.query(sql, [newInv,newSold,prodId], function (err, res) {
 		if (err) throw err;
 		 
 	})
- 
+	console.log("\n  Your purchase is complete.")
+	console.log("\n  Thank you. Come again.")
 	}//end function
