@@ -21,7 +21,7 @@ The data used for the app is manufactured for demonstration purposes.
 
 ## Functionality
 
-A database table of products availble for sale was created wit hthe following columns: 
+A database table of products availble for sale was created with the following columns: 
 * Product code 
 * Product name/description
 * Sales department
@@ -56,7 +56,8 @@ The app retrieves all products available for purchase from the database and disp
 * `bamazon.log` - Log file of output from the app for each operation 
 * `Capture mySQL Workbench.PNG` - Screen capture image of database workbench query  
 * `Capture mySQL Workbench2.PNG` - Screen capture image of database workbench query  
-* `Bamazon Screen Copy.docx` - Screen copy         
+* `Bamazon Screen Copy.docx` - Screen copy 
+* ` https://bigalr8.github.io/Basic-Portfolio/` - Portfolio with link to 'Bamazon'        
 
 ## Notes
 Additional optional functionality was specified for the facilitation of  managerial inventory queries and replenishment, and adding new product offerings 
